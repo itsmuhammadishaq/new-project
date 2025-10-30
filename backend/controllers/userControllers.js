@@ -28,7 +28,7 @@ const registerUser = asyncHandler(async (req, resp) => {
       email: user.email,
       isAdmin: user.isAdmin,
       pic: user.pic,
-      token:generateToken(user._id)
+      token: generateToken(user._id),
     });
   } else {
     resp.status(400);
@@ -45,7 +45,7 @@ const authUser = asyncHandler(async (req, resp) => {
       email: user.email,
       isAdmin: user.isAdmin,
       pic: user.pic,
-      token:generateToken(user._id)
+      token: generateToken(user._id),
     });
   } else {
     resp.status(400);
@@ -80,4 +80,63 @@ const updateUserProfile = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { registerUser, authUser,updateUserProfile };
+const { OAuth2Client } = require("google-auth-library");
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+const googleLogin = asyncHandler(async (req, res) => {
+  const { token } = req.body;
+
+  const ticket = await client.verifyIdToken({
+    idToken: token,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  });
+
+  const payload = ticket.getPayload();
+  const { email, name, picture } = payload;
+
+  let user = await User.findOne({ email });
+
+  if (!user) {
+    user = await User.create({
+      name,
+      email,
+      password: Math.random().toString(36).slice(-8),
+      pic: picture,
+    });
+  }
+
+  res.json({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    pic: user.pic,
+    isAdmin: user.isAdmin,
+    token: generateToken(user._id),
+  });
+});
+
+const facebookLoginController = asyncHandler(async (req, res) => {
+  console.log("inside controller", req);
+  if (!req.user) {
+    res.status(401);
+    throw new Error("Facebook authentication failed");
+  }
+
+  const user = req.user;
+  res.json({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    pic: user.pic,
+    token: generateToken(user._id),
+  });
+});
+
+module.exports = {
+  registerUser,
+  authUser,
+  updateUserProfile,
+  googleLogin,
+  facebookLoginController,
+};
