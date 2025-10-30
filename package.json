@@ -3,14 +3,21 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon backend/server.js"
+    "start": "nodemon backend/server.js",
+    "client": "npm start  ---prefix  frontend",
+    "dev": "concurrently\"npm start\"\"npm run client\""
   },
   "author": "ishaq",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "concurrently": "^9.2.1",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
+    "express-async-handler": "^1.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.18.2",
     "nodemon": "^3.1.10",
     "react-bootstrap": "^1.4.0"
   }
