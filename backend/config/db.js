@@ -9,7 +9,7 @@ async function connectDB() {
       return;
     }
 
-    const conn = await mongoose.connect(process.env.MaNGODB_URL);
+    const conn = await mongoose.connect(process.env.MANGODB_URL);
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.error(`Error: ${error.message}`);
