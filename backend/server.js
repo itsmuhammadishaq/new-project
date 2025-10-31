@@ -17,8 +17,9 @@ const app = express();
 // ✅ Allowed frontend URLs
 const allowedOrigins = [
   "http://localhost:3000",
+  
   "https://frontend-zeta-black-88.vercel.app",
-  "https://new-project-gold-pi.vercel.app", // ✅ added your frontend URL
+  "https://new-project-five-peach.vercel.app/", // ✅ added your frontend URL
 ];
 
 const corsOptions = {
