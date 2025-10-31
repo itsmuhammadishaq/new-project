@@ -17,7 +17,7 @@ const app = express();
 // ✅ Allowed frontend URLs
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://frontend-six-orpin-57.vercel.app",
+  "https://frontend-zeta-black-88.vercel.app/",
   "https://new-project-gold-pi.vercel.app", // ✅ added your frontend URL
 ];
 
