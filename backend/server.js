@@ -1,5 +1,6 @@
 const express = require("express");
 const dotenv = require("dotenv");
+const cors = require("cors");
 const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
 const noteRoutes = require("./routes/noteRoutes");
@@ -13,6 +14,13 @@ dotenv.config();
 connectDB();
 
 const app = express();
+app.use(cors({
+  origin: ['http://localhost:3000', 'https://frontend-six-orpin-57.vercel.app'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
 
 app.use(
   session({
