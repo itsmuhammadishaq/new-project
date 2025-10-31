@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon backend/server.js",
-    "client": "npm start  ---prefix  frontend",
-    "dev": "concurrently\"npm start\"\"npm run client\""
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js"
   },
   "author": "ishaq",
   "license": "ISC",
