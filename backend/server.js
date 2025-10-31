@@ -1,3 +1,4 @@
+// server.js
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
@@ -13,17 +14,21 @@ connectDB();
 const app = express();
 
 /* ----------------------------- CORS CONFIG ----------------------------- */
+// ✅ Allowed frontend URLs
 const allowedOrigins = [
   "http://localhost:3000",
   "https://frontend-six-orpin-57.vercel.app",
+  "https://new-project-gold-pi.vercel.app", // ✅ added your frontend URL
 ];
 
 const corsOptions = {
-  origin: (origin, callback) => {
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps, Postman)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error(`CORS blocked for origin: ${origin}`));
+      console.warn(`❌ CORS blocked: ${origin}`);
+      callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true,
@@ -31,18 +36,19 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
-// ✅ Apply CORS globally (must be first!)
+// ✅ Set headers manually to handle Vercel proxy behavior
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", allowedOrigins.includes(req.headers.origin) ? req.headers.origin : "null");
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
   res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  // Handle preflight requests
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
-
   next();
 });
 
@@ -51,14 +57,14 @@ app.use(cors(corsOptions));
 /* ----------------------------- SESSION CONFIG ----------------------------- */
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "long-secret-key",
+    secret: process.env.SESSION_SECRET || "super-secret-key",
     resave: false,
     saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
     },
   })
 );
@@ -67,7 +73,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/* ----------------------------- PASSPORT (OPTIONAL) ----------------------------- */
+/* ----------------------------- PASSPORT CONFIG (Optional) ----------------------------- */
 try {
   const passport = require("./config/facebookAuth");
   app.use(passport.initialize());
@@ -78,18 +84,18 @@ try {
 }
 
 /* ----------------------------- ROUTES ----------------------------- */
-app.use("/api/users", userRoutes);
-app.use("/api/notes", noteRoutes);
-
 app.get("/", (req, res) => {
   res.send("🚀 API is running successfully...");
 });
 
-/* ----------------------------- ERRORS ----------------------------- */
+app.use("/api/users", userRoutes);
+app.use("/api/notes", noteRoutes);
+
+/* ----------------------------- ERROR HANDLERS ----------------------------- */
 app.use(notFound);
 app.use(errorHandler);
 
-/* ----------------------------- SERVER / EXPORT ----------------------------- */
+/* ----------------------------- SERVER START ----------------------------- */
 if (require.main === module) {
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
