@@ -7,6 +7,7 @@ const {
 
   facebookLoginController,
   forgotPassword,
+  resetPassword,
 } = require("../controllers/userControllers");
 const { protect } = require("../middlewares/authMidlewares");
 const passport = require("passport");
