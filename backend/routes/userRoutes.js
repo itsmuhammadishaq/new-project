@@ -6,6 +6,7 @@ const {
   googleLogin,
 
   facebookLoginController,
+  forgotPassword,
 } = require("../controllers/userControllers");
 const { protect } = require("../middlewares/authMidlewares");
 const passport = require("passport");
@@ -16,6 +17,7 @@ router.route("/").post(registerUser);
 router.route("/login").post(authUser);
 router.route("/profile").post(protect, updateUserProfile);
 router.route("/google-login").post(googleLogin);
+router.post("/forgot-password", forgotPassword);
 
 router.post(
   "/facebook-login",

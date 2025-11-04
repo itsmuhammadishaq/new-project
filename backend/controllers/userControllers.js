@@ -133,10 +133,27 @@ const facebookLoginController = asyncHandler(async (req, res) => {
   });
 });
 
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user)
+    return res.status(404).json({ message: "User with this email not found." });
+
+  // Generate reset token + send email logic here
+  // Example:
+  const resetToken = crypto.randomBytes(20).toString("hex");
+  const resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+  await sendEmail(user.email, "Password Reset", `Reset link: ${resetLink}`);
+
+  res.json({ message: "Password reset email sent successfully!" });
+};
+
+
 module.exports = {
   registerUser,
   authUser,
   updateUserProfile,
   googleLogin,
   facebookLoginController,
+  forgotPassword 
 };
