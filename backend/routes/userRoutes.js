@@ -18,6 +18,8 @@ router.route("/login").post(authUser);
 router.route("/profile").post(protect, updateUserProfile);
 router.route("/google-login").post(googleLogin);
 router.post("/forgot-password", forgotPassword);
+router.post("/forgot-password", forgotPassword);
+router.put("/reset-password/:token", resetPassword);
 
 router.post(
   "/facebook-login",
