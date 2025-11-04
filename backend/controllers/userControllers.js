@@ -1,23 +1,25 @@
 const asyncHandler = require("express-async-handler");
-const crypto = require("crypto"); // <-- FIXED: imported crypto
 const User = require("../models/usermodel");
 const generateToken = require("../utils/generateToken");
-const { OAuth2Client } = require("google-auth-library");
-const sendEmail = require("../utils/sendEmail"); // Make sure you have this utility
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
-// REGISTER USER
 const registerUser = asyncHandler(async (req, resp) => {
   const { name, email, password, pic } = req.body;
 
   const userExists = await User.findOne({ email });
+
   if (userExists) {
     resp.status(400);
     throw new Error("User already exists");
   }
 
-  const user = await User.create({ name, email, password, pic });
+  const user = await User.create({
+    name,
+    email,
+    password,
+    pic,
+  });
+
+  console.log(user, "USER");
 
   if (user) {
     resp.status(201).json({
@@ -33,12 +35,9 @@ const registerUser = asyncHandler(async (req, resp) => {
     throw new Error("Error occurred!");
   }
 });
-
-// LOGIN USER
 const authUser = asyncHandler(async (req, resp) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
-
   if (user && (await user.matchPassword(password))) {
     resp.json({
       _id: user._id,
@@ -54,7 +53,6 @@ const authUser = asyncHandler(async (req, resp) => {
   }
 });
 
-// UPDATE USER PROFILE
 const updateUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
@@ -62,7 +60,9 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
     user.pic = req.body.pic || user.pic;
-    if (req.body.password) user.password = req.body.password;
+    if (req.body.password) {
+      user.password = req.body.password;
+    }
 
     const updatedUser = await user.save();
 
@@ -80,7 +80,10 @@ const updateUserProfile = asyncHandler(async (req, res) => {
   }
 });
 
-// GOOGLE LOGIN
+const { OAuth2Client } = require("google-auth-library");
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 const googleLogin = asyncHandler(async (req, res) => {
   const { token } = req.body;
 
@@ -113,8 +116,8 @@ const googleLogin = asyncHandler(async (req, res) => {
   });
 });
 
-// FACEBOOK LOGIN
 const facebookLoginController = asyncHandler(async (req, res) => {
+  console.log("inside controller", req);
   if (!req.user) {
     res.status(401);
     throw new Error("Facebook authentication failed");
@@ -130,7 +133,6 @@ const facebookLoginController = asyncHandler(async (req, res) => {
   });
 });
 
-// FORGOT PASSWORD
 const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
@@ -141,16 +143,16 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
   // Generate reset token
   const resetToken = crypto.randomBytes(20).toString("hex");
-
+  
   // Hash token and set to resetPasswordToken field
   user.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
   user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
-
+  
   await user.save();
 
   // Create reset URL
   const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-
+  
   const message = `
     <h2>Password Reset Request</h2>
     <p>You requested a password reset for your account.</p>
@@ -171,7 +173,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
     res.json({ 
       message: "Password reset email sent successfully!",
-      resetToken: resetToken // For development only, remove in production
+      resetToken: resetToken // Only for development, remove in production
     });
   } catch (error) {
     user.resetPasswordToken = undefined;
@@ -204,13 +206,14 @@ const resetPassword = asyncHandler(async (req, res) => {
   user.password = password;
   user.resetPasswordToken = undefined;
   user.resetPasswordExpires = undefined;
-
+  
   await user.save();
 
   res.json({ 
     message: "Password reset successful! You can now login with your new password." 
   });
 });
+
 
 module.exports = {
   registerUser,
