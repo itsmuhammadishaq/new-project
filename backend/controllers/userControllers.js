@@ -136,53 +136,62 @@ const facebookLoginController = asyncHandler(async (req, res) => {
 
 const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
-
-  const user = await User.findOne({ email });
-  if (!user) {
-    return res.status(404).json({ message: "User with this email not found." });
-  }
-
-  // Generate reset token
-  const resetToken = crypto.randomBytes(20).toString("hex");
-  
-  // Hash token and set to resetPasswordToken field
-  user.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
-  user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
-  
-  await user.save();
-
-  // Create reset URL
-  const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-  
-  const message = `
-    <h2>Password Reset Request</h2>
-    <p>You requested a password reset for your account.</p>
-    <p>Click the link below to reset your password:</p>
-    <a href="${resetUrl}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
-    <p>This link will expire in 1 hour.</p>
-    <p>If you did not request this reset, please ignore this email.</p>
-    <hr>
-    <p><small>This is an automated message. Please do not reply to this email.</small></p>
-  `;
-
   try {
-    await sendEmail({
-      to: user.email,
-      subject: "Password Reset Request - Your App Name",
-      html: message,
-    });
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "User with this email not found." });
+    }
 
-    res.json({ 
-      message: "Password reset email sent successfully!",
-      resetToken: resetToken // Only for development, remove in production
-    });
-  } catch (error) {
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
+    // Generate reset token
+    const resetToken = crypto.randomBytes(20).toString("hex");
+
+    // Hash token and set to resetPasswordToken field
+    user.resetPasswordToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+
     await user.save();
 
-    res.status(500);
-    throw new Error("Email could not be sent");
+    // Create reset URL
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+
+    const message = `
+      <h2>Password Reset Request</h2>
+      <p>You requested a password reset for your account.</p>
+      <p>Click the link below to reset your password:</p>
+      <a href="${resetUrl}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
+      <p>This link will expire in 1 hour.</p>
+      <p>If you did not request this reset, please ignore this email.</p>
+      <hr>
+      <p><small>This is an automated message. Please do not reply to this email.</small></p>
+    `;
+
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: "Password Reset Request - Your App Name",
+        html: message,
+      });
+
+      res.json({
+        message: "Password reset email sent successfully!",
+        resetToken: resetToken, // Only for development, remove in production
+      });
+    } catch (error) {
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+      await user.save();
+
+      res.status(500);
+      throw new Error("Email could not be sent");
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
@@ -207,14 +216,14 @@ const resetPassword = asyncHandler(async (req, res) => {
   user.password = password;
   user.resetPasswordToken = undefined;
   user.resetPasswordExpires = undefined;
-  
+
   await user.save();
 
-  res.json({ 
-    message: "Password reset successful! You can now login with your new password." 
+  res.json({
+    message:
+      "Password reset successful! You can now login with your new password.",
   });
 });
-
 
 module.exports = {
   registerUser,
