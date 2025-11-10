@@ -95,9 +95,30 @@ const DeleteNote = asyncHandler(async (req, res) => {
 
   res.json({ message: "Note removed successfully" });
 });
+const reorderNotes = asyncHandler(async (req, res) => {
+  const { order } = req.body; // array of note IDs in the new order
+  const userId = req.user._id;
+
+  if (!order || !Array.isArray(order)) {
+    res.status(400);
+    throw new Error("Invalid order array");
+  }
+
+  // Update positions for each note
+  const bulkOps = order.map((noteId, index) => ({
+    updateOne: {
+      filter: { _id: noteId, user: userId },
+      update: { $set: { position: index } },
+    },
+  }));
+
+  await Note.bulkWrite(bulkOps);
+  res.json({ message: "Notes reordered successfully" });
+});
 
 
 
 
 
-module.exports = { getNotes, createNote, getNoteById,updateNote,DeleteNote,toggleNoteCompletion };
+
+module.exports = { getNotes, createNote, getNoteById,updateNote,DeleteNote,toggleNoteCompletion,reorderNotes };

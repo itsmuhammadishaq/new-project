@@ -23,6 +23,10 @@ const noteSchema = mongoose.Schema(
       type: Boolean,
       default: false, // ✅ this stores checkbox state (true = checked)
     },
+        position: {
+      type: Number,
+      default: 0, // 👈 new field for ordering
+    },
   },
   {
     timestamps: true,
